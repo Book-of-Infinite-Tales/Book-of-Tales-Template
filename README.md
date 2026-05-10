@@ -49,23 +49,9 @@ The reader will fetch your `books.json`, list your books, and let you open and n
 
 ---
 
-## Submitting to the Library of Infinite Tales
+## Sharing your collection
 
-Once your collection is published and loads without errors, you can submit it to the [Library of Infinite Tales](https://github.com/RobMcA/Library-of-Infinite-Tales) so it appears in the reader's community section.
-
-Open a pull request adding your entry to `registry.json`:
-
-```json
-{
-  "repo": "your-github-username/your-repo-name",
-  "title": "Your Collection Title",
-  "author": "Your Name",
-  "description": "One sentence describing your collection.",
-  "tags": ["optional", "tags"]
-}
-```
-
-See the [contributing guide](https://github.com/RobMcA/Library-of-Infinite-Tales/blob/main/CONTRIBUTING.md) for full instructions.
+To share your collection with the community, see the [Library of Infinite Tales](https://github.com/RobMcA/Library-of-Infinite-Tales) — a registry of community books that appear in the reader's community section.
 
 ---
 
