@@ -181,7 +181,7 @@ writing for and their base/offset numbers.
 
 ## Manual reference
 
-If you prefer to write your own passages without Claude, see the full format documentation in the [book-of-tales-example](https://github.com/RobMcA/book-of-tales-example) repository. It covers every field in detail with examples.
+If you prefer to write your own passages without Claude, see [`docs/book_format.md`](docs/book_format.md) in this repository. It covers every field in detail with examples.
 
 The short version:
 
