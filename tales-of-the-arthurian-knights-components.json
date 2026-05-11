@@ -270,8 +270,8 @@
     { "id": "determined",   "name": "Determined"   },
     { "id": "doomed",       "name": "Doomed"       },
     { "id": "enraged",      "name": "Enraged"      },
-    { "id": "ensorcelled",  "name": "Ensorcelled"  },
     { "id": "ensnared",     "name": "Ensnared"     },
+    { "id": "ensorcelled",  "name": "Ensorcelled"  },
     { "id": "esteemed",     "name": "Esteemed"     },
     { "id": "imprisoned",   "name": "Imprisoned",   "encounters": [
         { "label": "Attempt to escape",  "passage": "2537" },
