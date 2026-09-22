@@ -97,14 +97,8 @@ The final test is the one in the style guide: read a response and one of its res
 
 ## Other guidance in this repo
 
-`CREATE_BOOK.md` follows this skill. Two other files carry older authoring conventions in places:
+- **`docs/book_format.md`** is the schema reference: every field in `book.json` and the components file, with examples. Use it for *what the JSON can say*. Use this skill for *how to write it*.
+- **`CREATE_BOOK.md`** is the step-by-step process for generating a whole book, and it follows this skill.
+- **`README.md`** Prompt 2 is a condensed version of both, for people working in claude.ai rather than Claude Code.
 
-| Topic | Older guidance | This skill (measured from the published book) |
-|---|---|---|
-| Skills per check | `docs/book_format.md`: exactly one `using` entry | one skill, one category, one renown type, or a pair of skills. "A or B" pairs appear about 60 times. |
-| Failure rewards | `README.md` Prompt 2: at least 1 Destiny on every outcome | the skill alone is typical, often with a negative status. Destiny on failure is rare (12%). |
-| Response length | `docs/book_format.md`: 2–5 paragraphs | median about 150 words: usually 1–3 paragraphs |
-| Walk-away option | `docs/book_format.md`: must carry a negative reward | usually a neutral `Move 1 space`, sometimes a small cost |
-| Where linked passages go | `docs/book_format.md`: the same thousand-block | anywhere, as long as they are not adjacent |
-
-The reader accepts either convention, so both validate. For the JSON schema itself, `docs/book_format.md` is authoritative. For how to write, follow this skill.
+All three agree with this skill. If you find a conflict, this skill's measurements win for writing, and `docs/book_format.md` wins for the schema.
