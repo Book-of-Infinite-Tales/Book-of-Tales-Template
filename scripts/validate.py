@@ -15,6 +15,7 @@ Exit code 1 = one or more errors.
 """
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -27,6 +28,28 @@ BUILTIN_SKILLS = {
     "Nature Lore", "Endure Hardship", "Hunting",
 }
 QUEST_BODY = "Refer to physical Book of Tales for this passage."
+# [[1234]] or [[1234|link text]] inside prose links to passage 1234.
+LINK = re.compile(r"\[\[([^\[\]|]+?)(?:\|[^\[\]]+?)?\]\]")
+
+
+def link_targets(text):
+    return [m.strip() for m in LINK.findall(text or "")]
+
+
+def check_links(text, path, entry_ids, errors):
+    for target in link_targets(text):
+        if target not in entry_ids:
+            errors.append(f"{path}: link points to unknown entry '{target}'")
+
+
+def valid_formula(f):
+    """{base} plus addLocationNumber and/or addAgeNumber set to true."""
+    if not isinstance(f, dict) or not isinstance(f.get("base"), (int, float)):
+        return False
+    loc, age = f.get("addLocationNumber"), f.get("addAgeNumber")
+    if loc not in (None, True) or age not in (None, True):
+        return False
+    return loc is True or age is True
 
 
 def load_json(path, errors, label):
@@ -69,7 +92,7 @@ def load_components(book, book_dir, errors, label):
 
 
 def get_using_valid_values(components):
-    valid = set(VALID_CATEGORIES) | {"Any"}
+    valid = set(VALID_CATEGORIES) | {"Divinity", "Romance", "Villainy", "Any"}
     if components.get("skills"):
         valid |= {s["name"] for s in components["skills"]}
     else:
@@ -82,13 +105,10 @@ def get_using_valid_values(components):
 def validate_target(target, path, errors):
     if isinstance(target, (int, float)):
         return
-    if isinstance(target, dict):
-        if not isinstance(target.get("base"), (int, float)):
-            errors.append(f"{path}: target.base must be a number")
-        if target.get("addLocationNumber") is not True:
-            errors.append(f"{path}: target.addLocationNumber must be true")
-        return
-    errors.append(f"{path}: target must be a number or {{base, addLocationNumber}}")
+    if not valid_formula(target):
+        errors.append(
+            f"{path}: target must be a number or {{base}} with addLocationNumber and/or addAgeNumber set to true"
+        )
 
 
 def validate_rewards(rewards, path, errors, valid_renown, valid_treasures, valid_statuses, valid_story_tokens):
@@ -97,8 +117,13 @@ def validate_rewards(rewards, path, errors, valid_renown, valid_treasures, valid
         return
 
     destiny = rewards.get("destiny")
-    if destiny is not None and not isinstance(destiny, (int, float)) and destiny != "location_number":
-        errors.append(f"{path}: rewards.destiny must be a number or 'location_number'")
+    if destiny is not None and not (
+        isinstance(destiny, (int, float)) or destiny == "location_number" or valid_formula(destiny)
+    ):
+        errors.append(
+            f"{path}: rewards.destiny must be a number, 'location_number', "
+            f"or {{base}} with addLocationNumber and/or addAgeNumber"
+        )
 
     renown = rewards.get("renown")
     if renown is not None:
@@ -109,11 +134,15 @@ def validate_rewards(rewards, path, errors, valid_renown, valid_treasures, valid
                 if not isinstance(r, dict):
                     errors.append(f"{path}: rewards.renown[{i}] must be an object")
                     continue
+                # A list of tracks means the player picks one ("Divinity or Romance").
                 rtype = r.get("type")
-                if not isinstance(rtype, str):
-                    errors.append(f"{path}: rewards.renown[{i}].type must be a string")
-                elif valid_renown and rtype not in valid_renown:
-                    errors.append(f"{path}: rewards.renown[{i}].type '{rtype}' is not a declared renown type")
+                rtypes = rtype if isinstance(rtype, list) else [rtype]
+                if not rtypes or not all(isinstance(t, str) for t in rtypes):
+                    errors.append(f"{path}: rewards.renown[{i}].type must be a string or a non-empty list of strings")
+                elif valid_renown:
+                    for t in rtypes:
+                        if t not in valid_renown:
+                            errors.append(f"{path}: rewards.renown[{i}].type '{t}' is not a declared renown type")
                 if not isinstance(r.get("delta"), (int, float)):
                     errors.append(f"{path}: rewards.renown[{i}].delta must be a number")
 
@@ -167,6 +196,12 @@ def validate_rewards(rewards, path, errors, valid_renown, valid_treasures, valid
             errors.append(f"{path}: rewards.storyToken must be an integer")
         elif valid_story_tokens and story_token not in valid_story_tokens:
             errors.append(f"{path}: rewards.storyToken {story_token} is not a declared story token number")
+
+    notes = rewards.get("notes")
+    if notes is not None and (
+        not isinstance(notes, list) or not all(isinstance(n, str) and n.strip() for n in notes)
+    ):
+        errors.append(f"{path}: rewards.notes must be a list of non-empty strings")
 
     movement = rewards.get("movement")
     if movement is not None and not isinstance(movement, (int, float)) and movement != "free":
@@ -286,6 +321,8 @@ def validate_book(book_json_path, show_missing=False):
 
         if not isinstance(entry.get("body"), str):
             errors.append(f"{path}: missing required string field 'body'")
+        else:
+            check_links(entry["body"], path, entry_ids, errors)
 
         # Quest and status passages must use the restricted body
         if eid in restricted_passages:
@@ -329,6 +366,8 @@ def validate_book(book_json_path, show_missing=False):
                         continue
                     if not isinstance(opt.get("label"), str):
                         errors.append(f"{rpath}: missing required string field 'label'")
+                    elif link_targets(opt["label"]):
+                        errors.append(f"{rpath}: label contains a [[link]]; a response already leads to its goto")
                     opt_goto = opt.get("goto")
                     if not isinstance(opt_goto, str):
                         errors.append(f"{rpath}: missing required string field 'goto'")
@@ -348,31 +387,54 @@ def validate_book(book_json_path, show_missing=False):
                         errors.append(f"{rpath}: must be an object")
                         continue
 
+                    # Several values mean the knight picks one ("Piety or Magic").
                     using = opt.get("using")
-                    if not isinstance(using, list):
-                        errors.append(f"{rpath}: missing required array field 'using'")
-                    elif len(using) != 1:
-                        errors.append(
-                            f"{rpath}: 'using' must contain exactly one entry, got {len(using)}"
-                        )
-                    elif using[0] not in valid_using:
-                        errors.append(
-                            f"{rpath}: 'using' value '{using[0]}' is not a valid skill, "
-                            f"category, or renown type"
-                        )
+                    if not isinstance(using, list) or not using:
+                        errors.append(f"{rpath}: missing required non-empty array field 'using'")
+                    else:
+                        for u in using:
+                            if u not in valid_using:
+                                errors.append(
+                                    f"{rpath}: 'using' value '{u}' is not a valid skill, "
+                                    f"category, or renown type"
+                                )
+                        if opt.get("total") is not None:
+                            if not isinstance(opt["total"], bool):
+                                errors.append(f"{rpath}: total must be a boolean")
+                            elif opt["total"] and not all(u in VALID_CATEGORIES for u in using):
+                                errors.append(f"{rpath}: 'total': true needs skill categories in 'using'")
+
+                    if isinstance(opt.get("label"), str) and link_targets(opt["label"]):
+                        errors.append(f"{rpath}: label contains a [[link]]; put links in outcome text")
 
                     if "target" not in opt:
                         errors.append(f"{rpath}: missing required field 'target'")
                     else:
                         validate_target(opt["target"], rpath, errors)
 
-                    for outcome_key in ("success", "failure"):
+                    # partial is an optional middle band: {min, body, rewards}.
+                    outcome_keys = ["success", "failure"]
+                    partial = opt.get("partial")
+                    if partial is not None:
+                        outcome_keys.append("partial")
+                        pmin = partial.get("min") if isinstance(partial, dict) else None
+                        if not isinstance(pmin, (int, float)):
+                            errors.append(f"{rpath}.partial: missing required number field 'min'")
+                        elif isinstance(opt.get("target"), (int, float)) and pmin >= opt["target"]:
+                            errors.append(f"{rpath}.partial: min ({pmin}) must be below the target ({opt['target']})")
+
+                    for outcome_key in outcome_keys:
                         outcome = opt.get(outcome_key)
                         if not isinstance(outcome, dict):
                             errors.append(f"{rpath}: missing required object field '{outcome_key}'")
                             continue
                         if not isinstance(outcome.get("body"), str):
                             errors.append(f"{rpath}.{outcome_key}: missing required string field 'body'")
+                        else:
+                            check_links(outcome["body"], f"{rpath}.{outcome_key}", entry_ids, errors)
+                        for note in (outcome.get("rewards") or {}).get("notes") or []:
+                            if isinstance(note, str):
+                                check_links(note, f"{rpath}.{outcome_key}.rewards.notes", entry_ids, errors)
                         out_goto = outcome.get("goto")
                         if out_goto is not None:
                             if not isinstance(out_goto, str):
@@ -396,6 +458,9 @@ def validate_book(book_json_path, show_missing=False):
                         errors.append(f"{rpath}: romantic must be a boolean")
 
         if entry.get("rewards") is not None:
+            for note in (entry["rewards"] if isinstance(entry["rewards"], dict) else {}).get("notes") or []:
+                if isinstance(note, str):
+                    check_links(note, f"{path}.rewards.notes", entry_ids, errors)
             validate_rewards(
                 entry["rewards"],
                 path,
