@@ -110,7 +110,7 @@ The presence of these fields determines the passage type. Types can be mixed for
 
 No rewards, no additional prose. The body is the entire entry.
 
-**Result passages as encounter exits are extremely rare.** Outside of age starts, epilogues, and quests, a result passage appears only when a player has chosen to disengage entirely from an encounter — the rare 3rd option on a response passage. Such a passage must include a meaningful negative reward (a loss of destiny, a negative renown delta, or an unwanted status) to reflect the cost of not engaging with the story. Do not use result passages as a convenient shortcut for encounters that are hard to resolve through skill checks.
+**Result passages inside encounters are short and purposeful.** Besides age starts, epilogues and quests, a result passage is where a choice leads when no roll is needed: hearing a character's story (lore plus a small reward), accepting a blessing or gift, or walking away. A walk-away is one to three sentences and usually grants `"movement": 1`, sometimes with a small cost. Don't use result passages to avoid writing a skill check the scene needs.
 
 ---
 
@@ -148,13 +148,13 @@ Responses never contain skill checks — those happen on the resolution passage 
 
 ### Response passage length
 
-The `body` of a response passage should be **2 to 5 paragraphs**. Use `\n\n` to separate paragraphs. This is the scene-setting prose that draws the player in before they make their choice — it should be rich enough to ground the encounter but not so long it buries the decision.
+The `body` of a response passage is typically **80–300 words** (usually 1–3 paragraphs; the published book's median is about 150). Use `\n\n` to separate paragraphs. It sets the scene, introduces who is there (usually in their own words), and makes the problem clear before the choices.
 
 ### Number of response options
 
-Most response passages should offer exactly **2 options**. Both should lead to resolution passages that fully engage with the story.
+Most response passages offer **2 options**, usually a real fork (help or rob, serve or oppose, by force or by wit). A **3rd option** is fine when it is a genuine road: walking away, a romantic option, asking for someone's story, or a third verdict at a trial. A 4th is very rare. A single option is used only to continue a scene after a gate.
 
-A **3rd option** is permitted only as an exit — a choice to disengage from the encounter entirely, pointing to a result passage rather than a resolution passage. This exit option should be **extremely rare**. It represents a deliberate narrative choice to walk away, and it must carry an appropriate negative consequence (see Result passages below). Do not include an exit option by default; only add one when it is narratively meaningful.
+Each option's label starts "You may" and names a deed, never a skill.
 
 ---
 
@@ -173,24 +173,24 @@ A resolution passage is where a skill check occurs. It has one or more `Resoluti
       "target": 3,
       "success": {
         "body": "You give your name without hesitation...",
-        "rewards": { "destiny": 2, "renown": [{ "type": "Divinity", "delta": 1 }] }
+        "rewards": { "destiny": 2, "skills": [{ "category": "Spiritual" }], "renown": [{ "type": "Divinity", "delta": 1 }] }
       },
       "failure": {
         "body": "You cannot find the words...",
-        "rewards": { "destiny": 1, "renown": [{ "type": "Divinity", "delta": -1 }] }
+        "rewards": { "skills": [{ "name": "Piety" }], "renown": [{ "type": "Divinity", "delta": -1 }] }
       }
     },
     {
       "label": "puzzle out the meaning before speaking",
-      "using": ["Wisdom", "Magic", "Spiritual"],
-      "target": { "base": 2, "addLocationNumber": true },
+      "using": ["Spiritual"],
+      "target": { "base": 3, "addLocationNumber": true },
       "success": {
         "body": "You answer with the old forms...",
-        "rewards": { "destiny": "location_number", "treasures": "Ring of the Well" }
+        "rewards": { "destiny": "location_number", "skills": [{ "category": "Spiritual" }], "treasures": "Faerie Ring" }
       },
       "failure": {
         "body": "You take too long...",
-        "rewards": { "destiny": 1, "statuses": [{ "action": "gain", "name": "Obsessed" }] }
+        "rewards": { "skills": [{ "category": "Spiritual" }], "statuses": [{ "action": "gain", "name": "Ensorcelled" }] }
       }
     }
   ]
@@ -202,7 +202,7 @@ A resolution passage is where a skill check occurs. It has one or more `Resoluti
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `label` | string | No | Narrative description of what this skill choice represents. |
-| `using` | array of strings | Yes | Exactly one entry: either a single skill name or a single skill category. See below. |
+| `using` | array of strings | Yes | One skill, one skill category, one renown type, or a pair of skills that suit the same deed. See below. |
 | `target` | number or object | Yes | The difficulty (see Resolution targets). |
 | `romantic` | boolean | No | Marks this option as romantic content. |
 | `success` | ResolutionOutcome | Yes | Outcome when the player meets or exceeds the target. |
@@ -210,16 +210,18 @@ A resolution passage is where a skill check occurs. It has one or more `Resoluti
 
 ### Resolution skill choices
 
-The `using` array must contain **exactly one entry**, which is either:
-- A **single specific skill** name (e.g. `["Piety"]`) — use this when the narrative calls for a precise approach.
-- A **single skill category** (e.g. `["Martial"]`) — use this when any skill within the category would plausibly fit the action.
+The `using` array holds one of:
+- a **single skill** (e.g. `["Piety"]`), when the deed calls for a precise approach. This is the most common;
+- a **single skill category** (e.g. `["Martial"]`), when any skill in the family would plausibly fit;
+- a **single renown type** (e.g. `["Romance"]`), when reputation rather than a roll decides the outcome. The target is the number of ranks needed;
+- a **pair of skills** (e.g. `["Piety", "Magic"]`), when two specific skills suit the same deed equally. Use this sparingly.
 
-Do not list multiple individual skills in a single `using` array. If a resolution option could logically use more than one skill, use the skill category instead.
+A resolution passage usually offers one or two options, and two options should differ in kind (force against wit, faith against cunning).
 
 ### Resolution passage length
 
-- The `body` of the resolution passage (before the skill check) should be **1 to 3 paragraphs**.
-- The `body` of each outcome (`success` and `failure`) should also be **1 to 3 paragraphs**.
+- The `body` of the resolution passage (before the skill check) is short: **0 to 3 sentences** in which the knight commits to the choice.
+- The `body` of each outcome (`success` and `failure`) is typically **40–220 words**.
 
 ### ResolutionOutcome fields
 
@@ -287,7 +289,7 @@ A `Reward` object appears on result passages and on resolution outcomes. All fie
   "treasures": 1,
   "statuses": [
     { "action": "gain", "name": "Accompanied" },
-    { "action": "lose", "name": "Obsessed" }
+    { "action": "lose", "name": "Pursued" }
   ],
   "storyToken": 3,
   "movement": 2
@@ -304,13 +306,13 @@ A `Reward` object appears on result passages and on resolution outcomes. All fie
 | `storyToken` | number | The Story Token number gained. |
 | `movement` | number or `"free"` | Bonus map movement after the encounter. `"free"` = move anywhere. |
 
-### Design principle: failures still reward
+### Design principle: failure teaches
 
-In the Arthurian tradition, every outcome — success and failure — should grant something positive alongside any negative consequence. Two rules apply to all failure outcomes:
+1. **A failed skill check gains a skill.** Usually it is the skill or category tested: a failed `["Piety"]` check gives `"skills": [{ "name": "Piety" }]`, and a failed `["Martial"]` check gives `"skills": [{ "category": "Martial" }]`. Sometimes it is the lesson the scene taught instead, such as Wisdom after being outwitted.
+2. **Failures rarely grant Destiny.** Most give the skill alone, often with an unwanted status. When a failure does grant Destiny, it must be less than the success's.
+3. **Success usually grants 2–4 items:** Destiny, a skill of choice, and ranks of renown, with a status or treasure for bigger deeds.
 
-1. **Failed skill checks award a skill gain.** When a resolution option uses a specific skill or skill category and the player fails, the failure reward must include a `skills` gain for that skill or category — the knight learned something from the attempt. Example: a failed `["Piety"]` check gives `"skills": [{ "name": "Piety" }]`; a failed `["Martial"]` check gives `"skills": [{ "category": "Martial" }]`.
-
-2. **Negative consequences come from other reward types.** Failures are distinguished from successes through renown loss, unwanted statuses, or withheld rewards.
+For full reward calibration, see the `book-of-tales-author` skill (`.claude/skills/book-of-tales-author/references/rewards.md`).
 
 ---
 
@@ -643,7 +645,7 @@ The standard game uses these conventions, which your book should follow to feel 
 
 ### Passage numbering within an encounter
 
-The response passage and all its resolution and result passages should be **scattered throughout the same thousand block**, not placed consecutively. For example, an encounter starting at `1347` might have resolution passages at `1372`, `1389`, and `1412` (still within the `1xxx` block for Age 1).
+The resolution and result passages an encounter leads to should be **scattered**, never placed next to the passage that leads to them. They can go in any free ID, even in another character's block. For example, an encounter at `1347` might lead to `1172`, `1889` and `2412`.
 
 This is intentional: if related passages were consecutive, a player who accidentally glanced ahead or miscounted would read a passage that spoils an outcome. Scattering passages prevents this. Do not use consecutive numbering for the passages that make up a single encounter.
 

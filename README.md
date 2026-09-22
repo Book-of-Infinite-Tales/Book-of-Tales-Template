@@ -110,31 +110,38 @@ Entries are passages. The standard encounter flow is:
 
   Response passage  →  Resolution passage  →  (outcome with rewards)
 
-RESPONSE PASSAGE: Second-person narrative setting the scene, ending with
-2–4 italic choices in "responses[]". Each choice points ("goto") to its
-own resolution passage. Nearly every response should go to a resolution
-(skill check), not directly to a result.
+RESPONSE PASSAGE: Second-person, present-tense narrative (typically
+80–300 words) setting the scene, with named characters who speak. It ends
+with 2 choices in "responses[]" (sometimes 3), each starting "You may" and
+naming a deed, never a skill. Most choices go to a resolution (skill
+check). Hearing a story or walking away can go straight to a short result.
 
-RESOLUTION PASSAGE: Short narrative. One or more "resolutions[]" — each
-is one way to attempt the encounter. Each resolution has:
-  "using": array of skill names, skill categories, or renown types
+RESOLUTION PASSAGE: A few sentences of commitment, then one or two
+"resolutions[]", each a different way to attempt the encounter. Each has:
+  "using": one skill, one category, one renown type, or a pair of skills
   "target": a number (fixed), or {"base":N,"addLocationNumber":true} (variable)
   "success": { "body": "...", "rewards": { ... } }
   "failure": { "body": "...", "rewards": { ... } }
 
-Both success AND failure must award at least "destiny": 1.
+Success usually grants 2–4 items (Destiny, a skill of choice, ranks of
+renown). Failure teaches: it gains the tested skill, often with an
+unwanted status, and rarely any Destiny.
+
+Never name the player characters: Lancelot, Palomides, Gawain, Percival,
+Galahad, Tristan, Dame Enid or Dame Bradamante. Write everything fresh:
+don't reproduce text from the published Book of Tales.
 
 Skills (use exact capitalisation):
-  Martial:    Warfare, Sword & Shield, Mounted, Hunting
-  Spiritual:  Piety, Wisdom, Honor, Magic
-  Courtly:    Diplomacy, Cunning
-  Wilderness: Nature Lore, Endure Hardship
+  Martial:    Warfare, Sword & Shield, Mounted
+  Spiritual:  Piety, Wisdom, Magic
+  Courtly:    Diplomacy, Cunning, Honor
+  Wilderness: Nature Lore, Endure Hardship, Hunting
   Categories: Martial, Spiritual, Courtly, Wilderness (allows any skill in group)
   Renown:     Divinity, Romance, Villainy, Any
 
 Rewards: destiny (number or "location_number"), renown ([{type, delta}]),
 skills ([{name} or {category, count}]), treasures (number or named string),
-statuses ([{action:"gain"|"lose", name}]), storyToken (string),
+statuses ([{action:"gain"|"lose", name}]), storyToken (number),
 movement (number or "free").
 
 Passage numbering conventions:
