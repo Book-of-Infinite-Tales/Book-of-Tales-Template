@@ -86,7 +86,8 @@ Quest passages and status-encounter passages depend on the physical cards. Their
 - **Failure:** the knight learns. It gains the tested skill (or the category, or the lesson the scene taught), often with a negative status. Failures **usually grant no Destiny**, and a failure's Destiny must always be less than the success's.
 - The renown track follows the **deed**, not the skill. Villainous roads should be genuinely rewarding (more Destiny, more treasure), with the cost falling elsewhere.
 - Use only names from the components file for statuses, treasures and story tokens. For your own threads, use story tokens without printed notes: 1, 2, 3, 7, 12–20, 27–30.
-- Mechanics the schema can't express go in the body as a final bracketed line, for example `[Place a Hunting Skill Marker on your Accompanied Status Card]`.
+- Write conditional jumps as passage links: `If you have Story Token #14, turn immediately to [[1976]].` The player follows the link when the condition applies.
+- Use the structured fields where they fit: formula Destiny and targets (`{ "base": 1, "addLocationNumber": true }`, `addAgeNumber`), `"partial"` for graded renown checks, `"total": true` for category totals, and a list of tracks for "Divinity or Romance". Anything else goes in the reward's `notes`, for example `"Place a Hunting Skill Marker on your Accompanied Status Card"`.
 
 ### Passage ID management
 The formula IDs (character + feature, milieu, location, Place of Power, quest, status, age starts, epilogue) are reserved. Resolution and result passages use **free IDs**. Keep a running list of the IDs you assign. **Never place a linked passage next to the one that leads to it.** Scatter them widely, even into other character blocks, so glancing at a neighbouring number never spoils an outcome.

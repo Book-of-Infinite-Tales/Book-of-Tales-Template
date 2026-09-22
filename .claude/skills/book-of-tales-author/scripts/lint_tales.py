@@ -28,6 +28,8 @@ ARCHAIC = ["prithee", "thee", "thou", "thy", "thine", "hath", "doth", "'tis", "y
            "forsooth", "verily", "hither", "whither", "betwixt", "naught", "mayhap", "wherefore", "art thou"]
 MODERN = ["okay", "ok,", "deal with it", "stressful", "trauma", "closure", "boundaries", "awesome", "guys"]
 PHYSICAL = "Refer to physical Book of Tales for this passage."
+TOKEN_CHECK = re.compile(r"(?:have|has|hold|holds|possess|possesses|without)\s+Story Token #(\d+)", re.I)
+LINK = re.compile(r"\[\[([^\[\]|]+?)(?:\|[^\[\]]+?)?\]\]")
 
 errors, warnings = [], []
 
@@ -68,6 +70,31 @@ def check_text(eid, text, where):
         warn(eid, f"{where} has {text.count(chr(0x2014))} em-dashes; prefer short sentences")
 
 
+def check_links(eid, text, where, ids):
+    """Every [[link]] must point to an entry, and should not sit next to its source."""
+    for m in LINK.finditer(text or ""):
+        target = m.group(1).strip()
+        if target not in ids:
+            err(eid, f"{where} links to [[{target}]], which is not in the book")
+        elif target.isdigit() and eid.isdigit() and abs(int(target) - int(eid)) <= 2:
+            warn(eid, f"{where} links to {target}, right next to {eid}; scatter linked passages")
+
+
+def reward_notes(eid, reward, where, ids, checked):
+    for note in (reward or {}).get("notes") or []:
+        check_text(eid, note, f"{where} note")
+        check_links(eid, note, f"{where} note", ids)
+        for m in re.finditer(TOKEN_CHECK, note):
+            checked.setdefault(int(m.group(1)), set()).add(eid)
+
+
+def check_renown_types(eid, reward, where):
+    for r in (reward or {}).get("renown") or []:
+        types = r.get("type") if isinstance(r.get("type"), list) else [r.get("type")]
+        if not types or any(t not in RENOWN for t in types):
+            err(eid, f"{where} renown type {r.get('type')!r} is not Divinity, Romance, Villainy or Any")
+
+
 def check_rewards_skill(eid, using, failure):
     """A failed skill check should teach a skill."""
     r = (failure or {}).get("rewards") or {}
@@ -89,6 +116,7 @@ def main():
     path = sys.argv[1]
     quiet = "--quiet" in sys.argv
     book, E = load(path)
+    ids = set(E)
 
     skill_use = Counter()
     awarded, checked = {}, {}
@@ -101,10 +129,13 @@ def main():
             continue
         total_words += words(body)
         check_text(eid, body, "body")
+        check_links(eid, body, "body", ids)
+        reward_notes(eid, e.get("rewards"), "rewards", ids, checked)
+        check_renown_types(eid, e.get("rewards"), "rewards")
         low = " " + body.lower() + " "
         for a in ARCHAIC:
             archaic[a] += len(re.findall(r"(?<![a-z'])" + re.escape(a) + r"(?![a-z])", low))
-        for m in re.finditer(r"Story Token #(\d+)", body):
+        for m in re.finditer(TOKEN_CHECK, body):
             checked.setdefault(int(m.group(1)), set()).add(eid)
         if (e.get("rewards") or {}).get("storyToken"):
             awarded.setdefault(e["rewards"]["storyToken"], set()).add(eid)
@@ -127,8 +158,10 @@ def main():
         for r in responses:
             label = r.get("label", "")
             check_text(eid, label, "choice")
-            for m in re.finditer(r"Story Token #(\d+)", label):
+            for m in re.finditer(TOKEN_CHECK, label):
                 checked.setdefault(int(m.group(1)), set()).add(eid)
+            if LINK.search(label):
+                err(eid, f"choice '{label[:50]}' contains a [[link]]; a choice already leads to its goto")
             core = label.lstrip("* ").strip()
             if not (core.startswith("You may") or core.startswith(("If ", "Otherwise"))):
                 err(eid, f"choice '{label[:50]}' should start with 'You may'")
@@ -156,18 +189,40 @@ def main():
                     skill_use["[" + u + "]"] += 1
             if len(using) > 2:
                 warn(eid, f"option uses {len(using)} skills; use one, a pair, or a category")
+            if LINK.search(o.get("label") or ""):
+                err(eid, f"check label '{o.get('label')[:40]}' contains a [[link]]; put links in outcome text")
+            total = o.get("total") is True
+            if total and not all(u in CATEGORIES for u in using):
+                err(eid, f"\"total\": true needs skill categories in using, not {using}")
             t = o.get("target")
             if isinstance(t, int):
                 if all(u in RENOWN for u in using):
                     if not 1 <= t <= 6:
                         warn(eid, f"renown threshold {t} is unusual (book uses 3–5)")
+                elif total:
+                    if not 6 <= t <= 14:
+                        warn(eid, f"category-total target {t} is unusual (a total runs 3–4 above a single-skill target)")
                 elif not 2 <= t <= 8:
                     warn(eid, f"target {t} is outside the book's range (2–8; 4–5 standard)")
-            elif isinstance(t, dict) and not 1 <= t.get("base", 0) <= 5:
-                warn(eid, f"location target base {t.get('base')} is unusual (book uses 2–5, mostly 3)")
+            elif isinstance(t, dict):
+                if t.get("addLocationNumber") is not True and t.get("addAgeNumber") is not True:
+                    err(eid, "formula target needs addLocationNumber and/or addAgeNumber set to true")
+                elif not total and t.get("addLocationNumber") and not 1 <= t.get("base", 0) <= 5:
+                    warn(eid, f"location target base {t.get('base')} is unusual (book uses 2–5, mostly 3)")
             s, f = o.get("success") or {}, o.get("failure") or {}
-            for side, oc in (("success", s), ("failure", f)):
+            p = o.get("partial")
+            sides = [("success", s), ("failure", f)]
+            if p is not None:
+                sides.insert(1, ("partial", p))
+                if not isinstance(p.get("min"), (int, float)):
+                    err(eid, "partial outcome needs a numeric min")
+                elif isinstance(t, int) and p["min"] >= t:
+                    err(eid, f"partial min {p['min']} must be below the target {t}")
+            for side, oc in sides:
                 check_text(eid, oc.get("body", ""), side)
+                check_links(eid, oc.get("body", ""), side, ids)
+                reward_notes(eid, oc.get("rewards"), side, ids, checked)
+                check_renown_types(eid, oc.get("rewards"), side)
                 total_words += words(oc.get("body", ""))
                 n = words(oc.get("body", ""))
                 if n < 20:
@@ -177,7 +232,7 @@ def main():
                 tok = (oc.get("rewards") or {}).get("storyToken")
                 if tok:
                     awarded.setdefault(tok, set()).add(eid)
-                for m in re.finditer(r"Story Token #(\d+)", oc.get("body", "")):
+                for m in re.finditer(TOKEN_CHECK, oc.get("body", "")):
                     checked.setdefault(int(m.group(1)), set()).add(eid)
             if not (s.get("rewards") or {}):
                 warn(eid, "success grants nothing")
@@ -188,12 +243,12 @@ def main():
 
     # story token threads
     for tok, where in sorted(awarded.items()):
-        readers = checked.get(tok, set()) - where
+        readers = checked.get(tok, set())
         if not readers:
             warn(f"token {tok}", f"awarded at {', '.join(sorted(where))} but never checked")
     for tok, where in sorted(checked.items()):
         if tok not in awarded:
-            warn(f"token {tok}", f"mentioned at {', '.join(sorted(where))} but never awarded")
+            warn(f"token {tok}", f"checked at {', '.join(sorted(where))} but never awarded")
 
     # archaism budget: about 1 per 1,000 words in the published book
     arch_total = sum(archaic.values())
@@ -215,7 +270,7 @@ def main():
     if awarded or checked:
         print("story tokens:")
         for tok in sorted(set(awarded) | set(checked)):
-            print(f"  #{tok:<3} awarded at {sorted(awarded.get(tok, []))}  mentioned at {sorted(checked.get(tok, []))}")
+            print(f"  #{tok:<3} awarded at {sorted(awarded.get(tok, []))}  checked at {sorted(checked.get(tok, []))}")
     sys.exit(1 if errors else 0)
 
 

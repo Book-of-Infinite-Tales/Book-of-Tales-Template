@@ -44,11 +44,19 @@ A third choice is usually one of:
 }
 ```
 
-**Conditional choices.** Some choices are only open to certain knights, for example *"If this is the Age of the Quest of the Holy Grail, you may…"* or *"If you are not Unhorsed, you may…"*. The reader cannot hide an option, so put the condition at the front of the label, and the player applies it:
+**Conditional choices.** Some choices are only open to certain knights, for example *"If this is the Age of the Quest of the Holy Grail, you may…"* or *"If you are not Unhorsed, you may…"*. Put the condition at the front of the label. The player applies it:
 
 ```json
 { "label": "If this is the Age of the Quest of the Holy Grail, you may ask the anchoress for counsel in your search.", "goto": "1332" }
 ```
+
+## Passage links
+
+Write `[[1234]]` anywhere in an entry body, an outcome body or a reward note, and the reader shows it as a link to passage 1234. `[[1234|the war council]]` shows your own link text. This is how the book's conditional jumps work: the passage states the condition, and the player follows the link if it applies. The reader never needs to know what the knight holds.
+
+- Use links for gates (section 4), for outcomes that continue (section 5), and for any "turn to" in the prose.
+- Don't put links in response or resolution labels. A response already leads to its `goto`, and the validator rejects links there.
+- Every link must point to an existing passage. The reader's validator and `lint_tales.py` both check.
 
 ## 2. Resolution passage
 
@@ -64,7 +72,7 @@ Each option tests one of the following:
 | Either of two skills | *Piety or Magic (5)* | `["Piety", "Magic"]` | ~60 in the book |
 | Any skill in a category | *1 Martial Skill of your choice (4)* | `["Martial"]` | ~45 |
 | Renown ranks | *your ranks in Romance*: 4 or higher succeeds | `["Romance"]`, target = the threshold | ~40 |
-| Category total | *Total Wilderness Skill*: the sum of all three skills | `["Wilderness"]` plus label text, see below | ~15 |
+| Category total | *Total Wilderness Skill*: the sum of all three skills | `["Wilderness"]` with `"total": true` | ~15 |
 
 ```json
 {
@@ -93,23 +101,52 @@ Each option tests one of the following:
 
 **Two options should differ in kind:** force vs wit, faith vs cunning, fighting on horseback vs on foot. Don't offer two skills from the same category for the same deed.
 
+### Targets
+
+A target is a plain number (fixed), or a formula that adds the knight's Location # and/or the current Age #:
+
+| Print form | `target` |
+|---|---|
+| *Cunning (4)* | `4` |
+| *Hunting (3) + Location #* | `{ "base": 3, "addLocationNumber": true }` |
+| *Total Courtly Skill (5 + Current Age #)* | `{ "base": 5, "addAgeNumber": true }` |
+
 ### Renown checks with bands
 
-The published book often grades a renown check in three bands: *4 or more ranks* (best), *2–3 ranks* (middling), *0–1 ranks* (failure). The schema has one threshold, so:
-- `target` = the top band's threshold (3–5; 4 is most common);
-- `success` = the top band;
-- `failure` = the middle band's text, with any extra penalty for the bottom band as a bracketed line: `[If you have 0–1 Ranks of Romance, you also become Scorned.]`
+The published book often grades a renown check in three bands: *4 or more ranks* (best), *2–3 ranks* (middling), *0–1 ranks* (failure). Use `partial` for the middle band:
 
-Renown checks are not rolled, so mention in the label that the knight is drawing on reputation: "recount your deeds of love".
+```json
+{
+  "label": "recount your deeds of love",
+  "using": ["Romance"],
+  "target": 4,
+  "success": { "body": "…", "rewards": { "destiny": 3, "renown": [{ "type": "Romance", "delta": 1 }] } },
+  "partial": { "min": 2, "body": "…", "rewards": { "destiny": 1 } },
+  "failure": { "body": "…", "rewards": { "statuses": [{ "action": "gain", "name": "Scorned" }] } }
+}
+```
+
+- `target` is the top band's threshold (3–5; 4 is most common). `partial.min` is the middle band's floor and must be below it.
+- The reader shows three outcomes and labels the middle one "Partial (2+ Ranks)".
+- Renown checks are not rolled, so say in the label that the knight is drawing on reputation.
+- `partial` also works for rolled checks with a middle result, but the book rarely uses it that way.
 
 ### Category-total checks
 
-The book sometimes asks for the knight's *total* in a category (all three skills added together), against a higher target that often grows with the Age # ("5 + Current Age #"). The schema tests one skill from the category, so:
-- `using: ["Martial"]`;
-- say so in the label: "hold the line (use your Total Martial Skill: all three Martial skills added together)";
-- set the target 3–4 higher than a single-skill check would be. For "+ Current Age #", pick the number for the age the passage belongs to, or put the rule in the label.
+The book sometimes asks for the knight's *total* in a category (all three skills added together), against a higher target that often grows with the Age #. Set `"total": true`:
 
-Use this for grand trials of a whole way of life: a battle, a courtship of a queen, a season in the wild. Keep it rare.
+```json
+{
+  "label": "hold the line against the host",
+  "using": ["Martial"],
+  "total": true,
+  "target": { "base": 5, "addAgeNumber": true },
+  "success": { "body": "…", "rewards": { "destiny": { "base": 3, "addLocationNumber": true }, "renown": [{ "type": "Any", "delta": 1 }] } },
+  "failure": { "body": "…", "rewards": { "skills": [{ "category": "Martial" }] } }
+}
+```
+
+The reader shows "Total Martial Skill" with a reminder to add the three skills together. `using` must hold skill categories. Set the target 3–4 higher than a single-skill check would be. Use this for grand trials of a whole way of life: a battle, a courtship of a queen, a season in the wild. Keep it rare.
 
 ## 3. Result passage
 
@@ -129,55 +166,54 @@ Walk-away results are one to three sentences with `"rewards": { "movement": 1 }`
 
 ## 4. Gate passage (conditional at the top)
 
-**Use:** stopping a repeat encounter, following up a thread, or redirecting in a particular age. It sits at the top of a response or resolution:
-
-> *If you have Story Token #14, turn immediately to 1976. Otherwise, gain Story Token #14 and continue reading below.*
-
-The reader has no conditional logic, so split it into two entries:
+**Use:** stopping a repeat encounter, following up a thread, or redirecting in a particular age. It sits at the top of a response or resolution, and is written with a link:
 
 ```json
 {
   "id": "2013",
-  "body": "At the edge of a salt marsh, you find a pavilion hung with black and silver …",
+  "body": "At the edge of a salt marsh, you find a pavilion hung with black and silver.\n\nIf you have Story Token #14, turn immediately to [[1976]]. Otherwise, gain Story Token #14 and continue reading below.\n\nA herald in silver livery bars your way …",
+  "rewards": { "storyToken": 14 },
   "responses": [
-    { "label": "If you have Story Token #14, turn to the tale that follows your last visit.", "goto": "1976" },
-    { "label": "Otherwise, continue.", "goto": "2084" }
+    { "label": "You may demand to see his lady.", "goto": "1422" },
+    { "label": "You may offer the herald a wager.", "goto": "2280" }
   ]
 }
 ```
 
-Then `2084` carries on the scene, with `"rewards": { "storyToken": 14 }` on the entry, then its own choices. Put the setting sentence in the gate passage so the player knows where they are before choosing.
+- Put a setting sentence before the gate so the player knows where they are.
+- A knight who follows the link never reads the rest, so the entry's `rewards` only apply to those who read on. Here that means only they gain the token.
+- The published book's wording is the model: *If you have Story Token #N, turn immediately to [[…]]. Otherwise, gain Story Token #N and continue reading below.*
 
-Other gates the book uses:
-- **Age:** *If this is the Age of the Final Wars of Britain, turn immediately to 1651.* Used about 8 times.
-- **Redraw:** *If any player is on the quest "Escort the Queen", discard this Feature card, draw a new one and turn to that encounter.* Rare. It stops an encounter contradicting a quest in progress. In JSON, write it as a sentence in the body. It needs no response option.
-- **Status:** *If you are Betrothed…*, *If you are Unhorsed…*. Mostly used as a reward modifier inside a bracket, not as a gate.
+Other gates the book uses, all written the same way:
+- **Age:** *If this is the Age of the Final Wars of Britain, turn immediately to [[1651]].* Used about 8 times.
+- **Another player's token:** *If another player has Story Token #12, turn immediately to [[1340]].*
+- **Renown or status:** *If you have 3 or more Ranks of Villainy, turn immediately to [[…]].*
+- **Redraw:** *If any player is on the quest "Escort the Queen", discard this Feature card, draw a new one and turn to that encounter.* Rare. It stops an encounter contradicting a quest in progress. It needs no link.
 
 ## 5. Outcome that continues
 
-**Use:** when success or failure opens a second decision instead of ending the scene. About 10 outcomes in the book end by offering two new choices (*You may either "go after him" or "let him go"*), and several use named sub-sections (*Read "Press on" below*).
+**Use:** when success or failure opens a second decision instead of ending the scene. About 10 outcomes in the book end by offering two new choices, and several use named sub-sections (*Read "Press on" below*).
 
-Keep it rare. In JSON, the outcome gets a `goto` to a small response passage that holds the two choices, or directly to the named follow-on passage:
+Keep it rare. Write the choices into the outcome with links:
 
 ```json
 "failure": {
-  "body": "… He shoulders past you toward the stair, and you hear his sword clear its scabbard.",
-  "rewards": { "skills": [{ "name": "Cunning" }] },
-  "goto": "1590"
+  "body": "… He shoulders past you toward the stair, and you hear his sword clear its scabbard. You may either go after him ([[1514]]) or return to your chamber ([[1743]]).",
+  "rewards": { "skills": [{ "name": "Cunning" }] }
 }
 ```
 
-where `1590` is a response passage with two choices and a one-sentence body.
+When there is only one way on, use `"goto"` on the outcome instead. The reader shows it as a Continue button.
 
 ## 6. Unusual shapes
 
 Each appears a handful of times. Use them as spice, not as structure.
 
 - **Reward first, then the check.** *Gain Story Token #N. You may use Warfare to…* The entry has both `rewards` and `resolutions`.
-- **Choice inside an outcome.** *You may "cut the prisoner loose" or "leave him bound".* Map it as shape 5.
-- **Named sub-sections.** A passage offers "Press on" or "Give up the chase" after the rolls. Each sub-section becomes its own entry, reached by `goto`.
-- **A choice between two treasures, statuses or gifts.** *Draw 2 Treasure cards, keep one.* *Select one of these Status cards.* Write it in the body as a bracketed instruction.
-- **Map objectives.** *Place one of your Quest Markers and the story token on a named city. After an encounter there, remove them and claim the reward.* See story-tokens-and-renown.md. Write it in the body as a bracketed instruction.
+- **Choice inside an outcome.** *You may "cut the prisoner loose" or "leave him bound".* Use links, as in shape 5.
+- **Named sub-sections.** A passage offers "Press on" or "Give up the chase" after the rolls. Each sub-section becomes its own entry, linked from the outcome.
+- **A choice between two treasures, statuses or gifts.** *Draw 2 Treasure cards, keep one.* *Select one of these Status cards.* Use a reward note.
+- **Map objectives.** *Place one of your Quest Markers and the story token on a named city. After an encounter there, remove them and claim the reward.* See story-tokens-and-renown.md. Use a reward note.
 - **Global events.** *Every Knight at Camelot gains…* Used about 24 times, mostly in age starts and grand set pieces. Write in the body.
 
 ## 7. Special passages
@@ -188,18 +224,29 @@ Each appears a handful of times. Use them as spice, not as structure.
 - **Place of Power visit (25xx, one per age).** A full response passage, often with three choices. These are the grandest scenes in the book: Avalon, the Grail Castle, the Green Chapel.
 - **Quest and status encounters.** Body exactly `Refer to physical Book of Tales for this passage.` with no rewards.
 
-## Mechanics the schema can't express
+## Reward formulas and notes
 
-Write these as a final bracketed line in the body, in the book's reward grammar, and keep everything else in `rewards`:
+Most of the book's reward grammar has a structured field. Use it:
 
-| Mechanic | Bracket text |
+| Print form | `rewards` |
 |---|---|
-| "Skill of your choice" from any category | `[Gain 1 Skill of your choice]` (or use a category in `skills`) |
-| Destiny = N + Location # | `"destiny": "location_number"` plus `[Gain N additional Destiny]` |
-| Destiny = Age #, Obsessed number, highest rank | `[Gain Destiny equal to …]` |
-| Skill Marker on the Accompanied card | `[Place a Hunting Skill Marker on your Accompanied Status Card]` |
-| Move to a named place or by sea | `[You may immediately move up to 3 spaces by Sea]` |
-| Draw a Quest Card | `[Draw 1 Quest Card]` |
-| Lose all ranks of a renown | `[Lose all Ranks of Villainy]` |
-| Remove any unwanted status | `[You may remove 1 unwanted Status Card]` |
-| Conditional add-on | `[If you are Betrothed, gain 1 Rank of Villainy]` |
+| Gain Destiny = Location # | `"destiny": "location_number"` |
+| Gain Destiny = 1 + Location # | `"destiny": { "base": 1, "addLocationNumber": true }` |
+| Gain Destiny = Age # | `"destiny": { "base": 0, "addAgeNumber": true }` |
+| 2 Ranks of Divinity or Romance | `"renown": [{ "type": ["Divinity", "Romance"], "delta": 2 }]` |
+| 1 Rank of Renown | `"renown": [{ "type": "Any", "delta": 1 }]` |
+| 1 Courtly Skill of your choice | `"skills": [{ "category": "Courtly" }]` |
+
+Anything else goes in `notes`, one string per effect, written in the book's reward grammar. The reader prints each note inside the reward bracket, and notes may contain links:
+
+```json
+"rewards": {
+  "destiny": 2,
+  "notes": [
+    "Place a Hunting Skill Marker on your Accompanied Status Card",
+    "If you are Betrothed, gain 1 Rank of Villainy"
+  ]
+}
+```
+
+Typical notes: a Skill Marker on the Accompanied card; a move to a named place or by sea; *Draw 1 Quest Card*; *Lose all Ranks of Villainy*; *You may remove 1 unwanted Status Card*; *Gain Destiny equal to your highest Rank of Renown*; a conditional add-on such as *If you are Betrothed, gain 1 Rank of Villainy*; *On your next turn, turn to [[2134]]*.

@@ -59,7 +59,7 @@ A success typically grants **three items** (45% of successes). 88% grant between
 | Treasure | 18% | `1` (a random draw) far more than a named treasure. Named treasures are for climaxes. |
 | Story token | 2% | only when a thread begins (see story-tokens-and-renown.md) |
 
-**Location-scaled Destiny goes with location-scaled targets.** When the check scales with the Location #, the reward usually does too. The schema supports `"destiny": "location_number"`. For "1 + Location #", use `location_number` and add `[Gain 1 additional Destiny]` in the body.
+**Location-scaled Destiny goes with location-scaled targets.** When the check scales with the Location #, the reward usually does too. Write "= Location #" as `"destiny": "location_number"`, and "1 + Location #" as `"destiny": { "base": 1, "addLocationNumber": true }`.
 
 **Size by difficulty and consequence, not by length of prose.**
 
@@ -161,7 +161,7 @@ So, as a rough scale for failures: **Doomed, Despairing, Accursed and Imprisoned
 ## Movement
 
 - `Move 1 space` (`"movement": 1`) is the standard walk-away reward, and appears about 80 times.
-- Longer moves, sea moves, and "move to any City" are rewards for escapes, voyages and magical transport. Write them as bracketed text if they name a place or a mode (see passage-shapes.md).
+- Longer moves, sea moves, and "move to any City" are rewards for escapes, voyages and magical transport. Write them as a reward note if they name a place or a mode (see passage-shapes.md).
 
 ## Treasures
 

@@ -81,7 +81,7 @@ Every passage is an **entry**. Each entry has an `id` and `body`. The other fiel
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `id` | string | Yes | Unique identifier. Numeric strings (`"1234"`) sort naturally in the reader. |
-| `body` | string | Yes | Prose read aloud. Use `\n\n` to separate paragraphs. |
+| `body` | string | Yes | Prose read aloud. Use `\n\n` to separate paragraphs. May contain passage links (see Passage links). |
 | `romantic` | boolean | No | Marks the entire entry as romantic content. |
 | `retinue` | string | No | Whether the knight's retinue is present. One of `"beside"`, `"nearby"`, or `"absent"`. |
 | `responses` | array | No | Narrative choices (see Response passages). |
@@ -204,9 +204,11 @@ A resolution passage is where a skill check occurs. It has one or more `Resoluti
 | `label` | string | No | Narrative description of what this skill choice represents. |
 | `using` | array of strings | Yes | One skill, one skill category, one renown type, or a pair of skills that suit the same deed. See below. |
 | `target` | number or object | Yes | The difficulty (see Resolution targets). |
+| `total` | boolean | No | `true` when the check uses the knight's total across a skill category (all its skills' ranks added together). `using` must then hold skill categories. |
 | `romantic` | boolean | No | Marks this option as romantic content. |
 | `success` | ResolutionOutcome | Yes | Outcome when the player meets or exceeds the target. |
-| `failure` | ResolutionOutcome | Yes | Outcome when the player fails to meet the target. |
+| `partial` | ResolutionOutcome plus `min` | No | A middle band: reached with a result of at least `min` but below the target. `min` must be below a fixed target. See Graded checks. |
+| `failure` | ResolutionOutcome | Yes | Outcome when the player fails to meet the target (or `partial.min`, if set). |
 
 ### Resolution skill choices
 
@@ -227,9 +229,51 @@ A resolution passage usually offers one or two options, and two options should d
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `body` | string | Yes | Prose read when this outcome occurs. |
+| `body` | string | Yes | Prose read when this outcome occurs. May contain passage links. |
 | `rewards` | Reward object | No | Rewards applied for this outcome. |
 | `goto` | string | No | Entry id to continue to after this outcome. Rare — most outcomes are terminal. |
+
+### Graded checks
+
+Some checks have three results, most often renown checks: *4 or more ranks*, *2–3 ranks*, *0–1 ranks*. Add a `partial` outcome for the middle band:
+
+```json
+{
+  "label": "recount your deeds of love",
+  "using": ["Romance"],
+  "target": 4,
+  "success": { "body": "…", "rewards": { "destiny": 3 } },
+  "partial": { "min": 2, "body": "…", "rewards": { "destiny": 1 } },
+  "failure": { "body": "…", "rewards": { "statuses": [{ "action": "gain", "name": "Scorned" }] } }
+}
+```
+
+### Category totals
+
+`"total": true` tests the knight's total in a skill category instead of a single skill:
+
+```json
+{ "label": "hold the line", "using": ["Martial"], "total": true, "target": { "base": 5, "addAgeNumber": true }, "success": { … }, "failure": { … } }
+```
+
+---
+
+## Passage links
+
+Anywhere in an entry body, an outcome body or a reward note, `[[1234]]` renders as a link to passage 1234, and `[[1234|the war council]]` renders as a link with that text. Use links for the book's conditional jumps: the passage states the condition, and the player follows the link if it applies.
+
+```json
+{
+  "id": "2013",
+  "body": "At the edge of a salt marsh, you find a pavilion hung with black and silver.\n\nIf you have Story Token #14, turn immediately to [[1976]]. Otherwise, gain Story Token #14 and continue reading below.\n\nA herald bars your way …",
+  "rewards": { "storyToken": 14 },
+  "responses": [ … ]
+}
+```
+
+- Every link must point to an existing entry. The loader rejects the book otherwise.
+- Links are not allowed in response or resolution labels. A response already leads to its `goto`.
+- An outcome can offer a second decision with links: `"You may either go after him ([[1514]]) or return to your chamber ([[1743]])."`
 
 ---
 
@@ -266,8 +310,12 @@ Use a renown type for a renown check (no die roll — the player compares their 
 |---|---|
 | A plain number, e.g. `3` | Fixed difficulty: roll 1d6 + Skill Rank ≥ this value |
 | `{ "base": N, "addLocationNumber": true }` | Variable: difficulty = `N` + the Location # of the knight's current map space (a value 1–6 printed on the board space) |
+| `{ "base": N, "addAgeNumber": true }` | Variable: difficulty = `N` + the current Age # (1–3) |
+| `{ "base": N, "addLocationNumber": true, "addAgeNumber": true }` | Both |
 
-The variable form is commonly used for milieu passages where dangerous terrain scales with location.
+At least one of `addLocationNumber` and `addAgeNumber` must be `true`. The location form is commonly used where danger scales with the terrain. The age form suits grand trials that grow harder as the game goes on.
+
+For renown checks there is no die roll: the target is the number of ranks needed.
 
 ---
 
@@ -292,19 +340,21 @@ A `Reward` object appears on result passages and on resolution outcomes. All fie
     { "action": "lose", "name": "Pursued" }
   ],
   "storyToken": 3,
-  "movement": 2
+  "movement": 2,
+  "notes": ["Place a Hunting Skill Marker on your Accompanied Status Card"]
 }
 ```
 
 | Field | Type | Description |
 |---|---|---|
-| `destiny` | number or `"location_number"` | Destiny Points gained. `"location_number"` = gain points equal to the knight's current Location # (1–6). |
-| `renown` | array of `{type, delta}` | Renown changes. `delta` is positive to gain ranks, negative to lose. `type` is a renown name from `components.renown`, or `"Any"` for player's choice of track. |
+| `destiny` | number, `"location_number"`, or formula | Destiny Points gained. `"location_number"` = equal to the knight's current Location # (1–6). A formula has the same shape as a target: `{ "base": 1, "addLocationNumber": true }` = 1 + Location #; `{ "base": 0, "addAgeNumber": true }` = the Age #. |
+| `renown` | array of `{type, delta}` | Renown changes. `delta` is positive to gain ranks, negative to lose. `type` is a renown name from `components.renown`, `"Any"` for the player's choice of track, or a list of names for a choice among them (`["Divinity", "Romance"]` = "Divinity or Romance"). |
 | `skills` | array | Skill rewards. `{"name": "Piety"}` = gain that specific skill. `{"category": "Spiritual", "count": 1}` = gain any one Spiritual skill of the player's choice. `count` defaults to 1. |
 | `treasures` | number or string | Number = draw that many random Treasure cards. String = search for the named Treasure card specifically. |
 | `statuses` | array of `{action, name}` | `"gain"` = acquire the named Status card. `"lose"` = discard the named Status card early. |
 | `storyToken` | number | The Story Token number gained. |
 | `movement` | number or `"free"` | Bonus map movement after the encounter. `"free"` = move anywhere. |
+| `notes` | array of strings | Any other effect, printed inside the reward bracket as written: a Skill Marker on a status card, a move to a named place, a conditional add-on ("If you are Betrothed, gain 1 Rank of Villainy"). Notes may contain passage links. |
 
 ### Design principle: failure teaches
 

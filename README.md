@@ -119,9 +119,17 @@ check). Hearing a story or walking away can go straight to a short result.
 RESOLUTION PASSAGE: A few sentences of commitment, then one or two
 "resolutions[]", each a different way to attempt the encounter. Each has:
   "using": one skill, one category, one renown type, or a pair of skills
-  "target": a number (fixed), or {"base":N,"addLocationNumber":true} (variable)
+  "target": a number (fixed), or {"base":N,"addLocationNumber":true}
+            and/or "addAgeNumber":true (variable)
   "success": { "body": "...", "rewards": { ... } }
+  "partial": { "min": N, "body": "...", "rewards": { ... } }  (optional
+            middle band, e.g. renown checks graded 4+ / 2-3 / 0-1)
   "failure": { "body": "...", "rewards": { ... } }
+  "total": true  (optional: uses the knight's total across a category)
+
+PASSAGE LINKS: [[1234]] or [[1234|text]] in any body or reward note
+renders as a link. Write conditional jumps with them: "If you have Story
+Token #14, turn immediately to [[1976]]." The player decides.
 
 Success usually grants 2–4 items (Destiny, a skill of choice, ranks of
 renown). Failure teaches: it gains the tested skill, often with an
@@ -139,10 +147,12 @@ Skills (use exact capitalisation):
   Categories: Martial, Spiritual, Courtly, Wilderness (allows any skill in group)
   Renown:     Divinity, Romance, Villainy, Any
 
-Rewards: destiny (number or "location_number"), renown ([{type, delta}]),
-skills ([{name} or {category, count}]), treasures (number or named string),
+Rewards: destiny (number, "location_number", or {"base":N,
+"addLocationNumber":true} / "addAgeNumber":true), renown ([{type, delta}],
+type may be a list: ["Divinity","Romance"]), skills ([{name} or
+{category, count}]), treasures (number or named string),
 statuses ([{action:"gain"|"lose", name}]), storyToken (number),
-movement (number or "free").
+movement (number or "free"), notes (list of free-text effects).
 
 Passage numbering conventions:
   Age starts:  1000, 2000, 3000

@@ -78,7 +78,7 @@ Keep the whole book's skill use balanced. The published book uses each of the 12
 
 ### 5. Write the JSON
 
-Follow the mappings in passage-shapes.md. Put mechanics the schema can't express (a map move to a named city, a Quest Marker, a Skill Marker on the Accompanied card) as a final bracketed instruction line in the body. Keep everything the schema *can* express in `rewards`.
+Follow the mappings in passage-shapes.md. Write every "turn to" as a passage link (`[[1976]]`), and use the structured fields for formulas, renown bands, category totals and track choices. Put anything else, such as a map move to a named city, a Quest Marker or a Skill Marker on the Accompanied card, in the reward's `notes`.
 
 Set `"aiGenerated": true` in the manifest.
 
@@ -89,7 +89,7 @@ python .claude/skills/book-of-tales-author/scripts/lint_tales.py path/to/book.js
 python scripts/add_entries.py path/to/book.json new-entries.json   # when merging batches
 ```
 
-The lint script catches mechanical slips: a failure that teaches nothing, a response label without "You may", a banned name, a target out of range, prose that is too long or short, and heavy archaism. Then open the book in the reader (https://book-of-infinite-tales.github.io) and play a few encounters end to end.
+The lint script catches mechanical slips: a failure that teaches nothing, a response label without "You may", a banned name, a target out of range, a passage link to a missing entry, a malformed partial band or category total, a story token awarded but never checked, prose that is too long or short, and heavy archaism. Then open the book in the reader (https://book-of-infinite-tales.github.io) and play a few encounters end to end.
 
 ### 7. Read it aloud
 

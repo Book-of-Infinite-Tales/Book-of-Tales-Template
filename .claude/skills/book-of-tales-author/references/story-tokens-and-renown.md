@@ -15,10 +15,7 @@ Two systems carry a knight's history from one encounter to the next. Story token
 
 In `book.json`, unspecified renown is `{ "type": "Any", "delta": 1 }`.
 
-**"X or Y" rewards are very common.** More than 200 rewards read *2 Ranks of Divinity or Romance* or *1 Rank of Romance or Villainy*. The schema has no two-way choice, so either:
-- pick the track that best fits the knight's deed, or
-- use `"Any"` when all three would make sense, or
-- use `"Any"` and state the restriction in the body: `[Gain 2 Ranks of Divinity or Romance]`.
+**"X or Y" rewards are very common.** More than 200 rewards read *2 Ranks of Divinity or Romance* or *1 Rank of Romance or Villainy*. Write them as a list of tracks: `{ "type": ["Divinity", "Romance"], "delta": 2 }`. The player applies the whole delta to one track of their choice.
 
 ### How the book uses renown
 
@@ -47,12 +44,12 @@ Some resolutions test renown ranks instead of rolling: *use your ranks in Romanc
 
 ### Renown as a modifier
 
-Small conditional add-ons inside a reward bracket:
+Small conditional add-ons inside a reward bracket, written as reward `notes`:
 - *If you are Betrothed, gain 1 Rank of Villainy.* A romance while promised to another is infidelity.
 - *If you have 0 Ranks of Divinity, gain 1 Rank of Divinity.* A first step toward grace.
 - *Every Knight who is Betrothed and has 0 Ranks of Villainy gains 1 Rank of Romance.* An age-start blessing for the faithful.
 
-Write these as bracketed text in the body. The schema cannot condition rewards.
+The reader can't check these conditions, so the player applies them, just as with the printed book.
 
 ### Renown at the table's scale
 
@@ -113,4 +110,4 @@ The first visit plays the encounter and hands out the token. Any later visit, ev
 - **Every token awarded should be checked at least once**, and every check should have a token that can be earned. The lint script flags awards with no reader.
 - **A token is a memory, not a prize.** Don't award one as a consolation. Award it when something happened that the world should remember.
 - **The non-token path must be complete.** Players without the token read on normally. The token path is the bonus branch.
-- **In `book.json`,** award with `"rewards": { "storyToken": N }`, and check with a gate passage whose response options put the condition first: `"If you have Story Token #14, …"`. See passage-shapes.md.
+- **In `book.json`,** award with `"rewards": { "storyToken": N }`, and check with a passage link in the body: `If you have Story Token #14, turn immediately to [[1976]].` See passage-shapes.md (gate passages).
