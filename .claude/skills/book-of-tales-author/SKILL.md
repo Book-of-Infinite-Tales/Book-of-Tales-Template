@@ -1,13 +1,13 @@
 ---
 name: book-of-tales-author
-description: Write an original Book of Tales for the board game Tales of the Arthurian Knights, in the voice and structure of the published book, as a book.json the Book of Infinite Tales reader can load. Use when generating a new book, drafting or revising passages, designing encounters, choosing skill checks and rewards, planning story tokens, or reviewing a book for style. Covers themes and cast, plot patterns, passage shapes, reward calibration, story tokens, renown, and a detailed prose style guide.
+description: Write an original Book of Tales for the board game Tales of the Arthurian Knights, in a voice and structure similar to the published original book, as a book.json the Book of Infinite Tales reader can load. Use when generating a new book, drafting or revising passages, designing encounters, choosing skill checks and rewards, planning story tokens, or reviewing a book for style. Covers themes and cast, plot patterns, passage shapes, reward calibration, story tokens, renown, and a detailed prose style guide.
 ---
 
 # Book of Tales Author
 
-This skill helps you write a **new, original** Book of Tales that plays and reads like the one printed with *Tales of the Arthurian Knights*. It rests on an analysis of the published book: 1,284 passages, about 470,000 words, transcribed from photographs and measured passage by passage. The numbers in these files are counts from that analysis, not guesses.
+This skill helps you write a **new, original** Book of Tales that plays and reads like the one printed with *Tales of the Arthurian Knights*. It should be considered authoritative on how to structure the book.
 
-**This skill contains no text from the published book, and nothing you write with it should either.** The published book is copyrighted. Use it for patterns: how long passages run, what the choices look like, how rewards are sized, how a scene is paced. Do not reproduce its passages, its plots told beat for beat, or its original characters. Every example passage in this skill was written fresh to show the style.
+**This skill contains no text from the published book, and nothing you write with it should either.** The published original book is copyrighted. Use it for patterns: how long passages run, what the choices look like, how rewards are sized, how a scene is paced. Do not reproduce its passages, its plots told beat for beat, or its original characters. Every example passage in this skill was written fresh to show examples of the style.
 
 ## Reference files
 
