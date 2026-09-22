@@ -8,22 +8,18 @@
   "entries": [
     {
       "id": "1000",
-      "title": "The Golden Age of Camelot Begins",
       "body": "Replace this with your Age 1 opening passage. This text is read aloud when Age 1 begins."
     },
     {
       "id": "2000",
-      "title": "The Quest of the Holy Grail Begins",
       "body": "Replace this with your Age 2 opening passage. This text is read aloud when Age 2 begins."
     },
     {
       "id": "3000",
-      "title": "The Final Wars of Britain Begin",
       "body": "Replace this with your Age 3 opening passage. This text is read aloud when Age 3 begins."
     },
     {
       "id": "9999",
-      "title": "Epilogue",
       "body": "Replace this with your epilogue passage. This is read at the very end of the game."
     }
   ]

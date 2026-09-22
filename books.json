@@ -1,8 +1,8 @@
 {
   "schema": "book-of-infinite-tales/index/v1",
-  "title": "My Book of Tales Collection",
+  "title": "Your Book Collection Title",
   "author": "Your Name",
-  "description": "Custom Books of Tales for Tales of the Arthurian Knights.",
+  "description": "Your custom Books of Tales for Tales of the Arthurian Knights.",
   "books": [
     {
       "path": "example-book",
