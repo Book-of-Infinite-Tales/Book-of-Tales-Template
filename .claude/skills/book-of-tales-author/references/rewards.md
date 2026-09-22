@@ -119,7 +119,7 @@ How often each status is gained as a failure consequence in the published book, 
 
 Positive statuses (gained mostly on success): **Accompanied** (a companion joins; the most frequent status in the book, 54 awards), **Blessed**, **Esteemed**, **Determined**, **Beloved**, **Betrothed**, **Monarch** (rare, for the greatest deeds).
 
-Statuses can also be **lost** as rewards: `Lose Unhorsed` (given a horse), `Lose Pursued` (enemies shaken off), `Lose Obsessed` (not yet in the components file; see story-tokens-and-renown.md), `Lose Beast Form`, or *remove 1 unwanted Status Card*.
+Statuses can also be **lost** as rewards: `Lose Unhorsed` (given a horse), `Lose Pursued` (enemies shaken off), `Lose Obsessed`, `Lose Beast Form`, or *remove 1 unwanted Status Card*.
 
 ## What statuses do, and why it matters when you write
 

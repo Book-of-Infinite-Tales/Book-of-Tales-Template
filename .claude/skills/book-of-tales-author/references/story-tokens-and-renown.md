@@ -92,7 +92,7 @@ The first visit plays the encounter and hands out the token. Any later visit, ev
 
 **5. The held boon.** The token *is* the reward: *At any time, you may lose this token to remove one unwanted Status*, or a token placed on a status card to mark a lasting gift. Use it for a charm, a favour owed, a companion's special skill.
 
-**6. The obligation loop.** A token that drags the knight back: *on your next turn you cannot move and must return to the passage on this token*. Used for obsessions, such as an endless hunt for a legendary beast. Pair it with the Obsessed status. (Obsessed is a real status card but is missing from the template's components file. Add it there before using it, or the reader will reject the reward.)
+**6. The obligation loop.** A token that drags the knight back: *on your next turn you cannot move and must return to the passage on this token*. Used for obsessions, such as an endless hunt for a legendary beast. Pair it with the Obsessed status.
 
 **7. The collection.** Several tokens gathered across one location's rooms or trials, with a final passage that reads which ones you hold and routes accordingly.
 

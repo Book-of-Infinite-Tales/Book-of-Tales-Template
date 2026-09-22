@@ -581,7 +581,7 @@ Declaring skills in the components file enables validation: the loader will reje
 "storyTokens": [
   { "number": 1 },
   { "number": 4, "note": "Passage 2134" },
-  { "number": 5, "note": "Age 3 → Token 6" }
+  { "number": 5, "note": "Age 3: discard to treat a roll as 6" }
 ]
 ```
 
