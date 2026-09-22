@@ -6,6 +6,21 @@ You are writing a new, original Book of Tales for *Tales of the Arthurian Knight
 
 Use `./tales-of-the-arthurian-knights-components.json` as the components file.
 
+## Model and effort
+
+A full book runs to 1,000+ passages and several hundred thousand words, so it takes many sessions, not one. The book bible and ID ledger are what keep it consistent across them. Pick the model and effort for each phase:
+
+| Phase | Model | Effort | Why |
+|---|---|---|---|
+| Title, style, ages and book bible (Process 1–4) | Opus | High | Every later passage depends on these decisions, and they are little text, so the cost is small. |
+| Drafting passages (Generating 2) | Opus for quality, or Sonnet to save money | Medium | Voice and moral forks are where a stronger model shows. More effort mostly adds cost, since this is writing more than reasoning. |
+| Mechanics and JSON (targets, rewards, IDs) | Sonnet | Medium | Table lookups from `references/rewards.md` and careful bookkeeping. |
+| Lint fixes and balance passes (Generating 3) | Sonnet or Haiku | Low–Medium | The lint script finds the problems. The model only fixes them. |
+
+- Work one age or one character card per session, and re-read the book bible and `references/style-guide.md` at the start of each.
+- To save money, draft with Sonnet, then have Opus review each age for style.
+- Don't use Haiku for prose. It drifts from the style guide's finer rules, such as success and failure opening from the same moment, and the archaism budget.
+
 ## Process
 
 1. **Title.** Ask for the title of the book.
