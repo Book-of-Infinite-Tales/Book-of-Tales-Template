@@ -250,6 +250,16 @@ def main():
         if tok not in awarded:
             warn(f"token {tok}", f"checked at {', '.join(sorted(where))} but never awarded")
 
+    # check options per resolution: the published book offers two in about 69%
+    res_counts = [len(e.get("resolutions") or []) for e in E.values() if e.get("resolutions")]
+    if len(res_counts) >= 50:
+        share = sum(1 for n in res_counts if n == 2) / len(res_counts)
+        if share < 0.55:
+            warnings.append(
+                f"book: {share:.0%} of resolution passages offer two check options "
+                f"(published book: about 69%); add a second approach to more of them"
+            )
+
     # archaism budget: about 1 per 1,000 words in the published book
     arch_total = sum(archaic.values())
     if total_words and arch_total / total_words * 1000 > 3:
