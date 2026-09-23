@@ -17,6 +17,8 @@ In `book.json`, unspecified renown is `{ "type": "Any", "delta": 1 }`.
 
 **"X or Y" rewards are very common.** More than 200 rewards read *2 Ranks of Divinity or Romance* or *1 Rank of Romance or Villainy*. Write them as a list of tracks: `{ "type": ["Divinity", "Romance"], "delta": 2 }`. The player applies the whole delta to one track of their choice.
 
+**Never grant two tracks at once.** The published book almost never does it (about 3% of renown rewards, several of them the conditional *If you are Betrothed* note). Don't write +1 Divinity *and* +1 Romance: write *1 Rank of Divinity or Romance*. Don't add a Rank of Renown on top of a named track either: the deed has already chosen the track. Losses alongside a gain are fine (*2 Ranks of Villainy | Lose 1 Rank of Divinity*). The book pairs the tracks as Divinity or Romance (most common), Romance or Villainy, and Divinity or Villainy, always in that order.
+
 ### How the book uses renown
 
 **The deed sets the track, not the skill.** Piety almost always pays Divinity (80% of Piety successes). Beyond that, the track follows what the knight *did*. Cunning used to trick a tyrant pays Divinity. Cunning used to cheat at dice pays Villainy. A charge on horseback for Arthur pays Romance. The same charge for King Lot pays Villainy.
