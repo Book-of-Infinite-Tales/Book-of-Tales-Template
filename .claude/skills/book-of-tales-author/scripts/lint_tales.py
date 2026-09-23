@@ -95,6 +95,14 @@ def check_renown_types(eid, reward, where):
             err(eid, f"{where} renown type {r.get('type')!r} is not Divinity, Romance, Villainy or Any")
 
 
+def check_one_renown(eid, reward, where):
+    """The published book grants one renown item per reward; two tracks become 'X or Y'."""
+    gains = [r for r in (reward or {}).get("renown") or [] if isinstance(r.get("delta"), (int, float)) and r["delta"] > 0]
+    if len(gains) > 1:
+        tracks = [r.get("type") for r in gains]
+        warn(eid, f"{where} grants {len(gains)} renown items {tracks}; use one item, e.g. an 'X or Y' list")
+
+
 def check_rewards_skill(eid, using, failure):
     """A failed skill check should teach a skill."""
     r = (failure or {}).get("rewards") or {}
@@ -132,6 +140,7 @@ def main():
         check_links(eid, body, "body", ids)
         reward_notes(eid, e.get("rewards"), "rewards", ids, checked)
         check_renown_types(eid, e.get("rewards"), "rewards")
+        check_one_renown(eid, e.get("rewards"), "rewards")
         low = " " + body.lower() + " "
         for a in ARCHAIC:
             archaic[a] += len(re.findall(r"(?<![a-z'])" + re.escape(a) + r"(?![a-z])", low))
@@ -223,6 +232,7 @@ def main():
                 check_links(eid, oc.get("body", ""), side, ids)
                 reward_notes(eid, oc.get("rewards"), side, ids, checked)
                 check_renown_types(eid, oc.get("rewards"), side)
+                check_one_renown(eid, oc.get("rewards"), side)
                 total_words += words(oc.get("body", ""))
                 n = words(oc.get("body", ""))
                 if n < 20:

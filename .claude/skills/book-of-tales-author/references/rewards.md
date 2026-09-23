@@ -54,7 +54,7 @@ A success typically grants **three items** (45% of successes). 88% grant between
 |---|---|---|
 | Destiny | 95% | **Location-scaled in about 42%** (`= Location #`, `= 1 + Location #`, `= 2 + Location #`). Otherwise 2 (16%), 3 (15%), 4 (10%), 1 (8%), 5 (3%), 6–7 (rare). |
 | Skill of your choice | 74% | one skill from a category, **usually the category of the skill tested** (about 75%). Sometimes a specific named skill, or two. |
-| Renown | 69% | 1 rank (most common) or 2 ranks. 3 ranks is exceptional. See below for which track. |
+| Renown | 69% | **One renown item per reward.** 1 rank (about two thirds), 2 ranks (about a third), 3 ranks exceptional. When a deed could earn either of two tracks, write one "X or Y" item (*1 Rank of Divinity or Romance*), not two separate gains. See below for which track. |
 | Status | 31% | positive ones: Accompanied, Esteemed, Determined, Blessed, Beloved, Betrothed. A **cost of success** is also common: Accursed, Wounded, Imprisoned. |
 | Treasure | 18% | `1` (a random draw) far more than a named treasure. Named treasures are for climaxes. |
 | Story token | 2% | only when a thread begins (see story-tokens-and-renown.md) |
